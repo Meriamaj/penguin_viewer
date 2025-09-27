@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Penguin Viewer - Three.js</title>
+  <style>
+    body { margin: 0; }
+    canvas { display: block; }
+  </style>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.148.0/build/three.module.js",
+        "three/examples/": "https://cdn.jsdelivr.net/npm/three@0.148.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <script type="module">
+    // On importe les modules nécessaires
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/examples/controls/OrbitControls.js';
+    import { GLTFLoader } from 'three/examples/loaders/GLTFLoader.js';
+
+    // Création de la scène 3D
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x111111); 
+
+    // Création de la caméra
+    const camera = new THREE.PerspectiveCamera(
+      75, 
+      window.innerWidth / window.innerHeight,
+      0.1,
+      1000
+    );
+    camera.position.set(0, 2, 5); 
+
+    // Création du moteur de rendu WebGL
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement); // on ajoute le rendu à la page
+
+    // Ajout d'une lumière douce venant du ciel
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
+    hemiLight.position.set(0, 20, 0);
+    scene.add(hemiLight);
+
+    // Contrôles de la caméra avec la souris 
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true; // mouvement fluide
+
+    // Chargement du modèle P
+    const loader = new GLTFLoader();
+    loader.load(
+      'penguin.glb', 
+      function (gltf) {
+        const model = gltf.scene;
+        model.scale.set(0.5, 0.5, 0.5);    // redimensionner le pingouin
+        model.position.set(0, 0, 0);       
+        model.rotation.y = Math.PI; 
+        scene.add(model);                 // l'ajouter à la scène
+        console.log("Modèle chargé :", model);
+      },
+      undefined, 
+      function (error) {
+        console.error("Erreur lors du chargement :", error);
+      }
+    );
+
+    // Boucle d'animation
+    function animate() {
+      requestAnimationFrame(animate); // appelle la fonction en boucle
+      controls.update();              // m-a-j la caméra si on bouge la souris
+      renderer.render(scene, camera); // dessine la scène avec la caméra
+    }
+    animate();
+
+    // Réajuster la scène quand on redimensionne la fenêtre
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
