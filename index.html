@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Penguin Viewer - Three.js</title>
+  <title>Penguin Viewer in Three.js</title>
   <style>
     body { margin: 0; }
     canvas { display: block; }
@@ -19,7 +19,6 @@
 </head>
 <body>
   <script type="module">
-    // On importe les modules nécessaires
     import * as THREE from 'three';
     import { OrbitControls } from 'three/examples/controls/OrbitControls.js';
     import { GLTFLoader } from 'three/examples/loaders/GLTFLoader.js';
@@ -40,16 +39,22 @@
     // Création du moteur de rendu WebGL
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement); // on ajoute le rendu à la page
+    document.body.appendChild(renderer.domElement); 
 
     // Ajout d'une lumière douce venant du ciel
     const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
     hemiLight.position.set(0, 20, 0);
     scene.add(hemiLight);
 
+    
+    // Ajout d'une lumière directionnelle 
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+    dirLight.position.set(3, 10, 10);
+    scene.add(dirLight);
+
     // Contrôles de la caméra avec la souris 
     const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true; // mouvement fluide
+    controls.enableDamping = true; 
 
     // Chargement du modèle P
     const loader = new GLTFLoader();
@@ -57,10 +62,10 @@
       'penguin.glb', 
       function (gltf) {
         const model = gltf.scene;
-        model.scale.set(0.5, 0.5, 0.5);    // redimensionner le pingouin
+        model.scale.set(0.5, 0.5, 0.5);    
         model.position.set(0, 0, 0);       
         model.rotation.y = Math.PI; 
-        scene.add(model);                 // l'ajouter à la scène
+        scene.add(model);                 
         console.log("Modèle chargé :", model);
       },
       undefined, 
