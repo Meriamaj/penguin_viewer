@@ -26,36 +26,65 @@
     // Création de la scène 3D
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x111111); 
+    scene.fog= new THREE.Fog(0x20232a, 5, 20);
 
     // Création de la caméra
     const camera = new THREE.PerspectiveCamera(
-      75, 
+      60, 
       window.innerWidth / window.innerHeight,
       0.1,
-      1000
+      100
     );
     camera.position.set(0, 2, 5); 
 
     // Création du moteur de rendu WebGL
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type= THREE.PCFSoftShadowMap;
     document.body.appendChild(renderer.domElement); 
 
     // Ajout d'une lumière douce venant du ciel
-    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.8);
     hemiLight.position.set(0, 20, 0);
     scene.add(hemiLight);
+
+    //ajout d'une lumière ambiante
+    const ambient = new THREE.AmbientLight(0xffffff, 0.3);
+    scene.add(ambient);
 
     
     // Ajout d'une lumière directionnelle 
     const dirLight = new THREE.DirectionalLight(0xffffff, 1);
-    dirLight.position.set(3, 10, 10);
+    dirLight.position.set(2, 5, 2);
+    dirLight.castShadow= true;
+    // config ombre directionnelle
+    dirLight.shadow.mapSize.width = 1024;
+    dirLight.shadow.mapSize.height = 1024;
+    const d = 4;
+    dirLight.shadow.camera.left = -d;
+    dirLight.shadow.camera.right = d;
+    dirLight.shadow.camera.top = d;
+    dirLight.shadow.camera.bottom = -d;
+    dirLight.shadow.camera.near = 1;
+    dirLight.shadow.camera.far = 50;
+    
     scene.add(dirLight);
+
 
     // Contrôles de la caméra avec la souris 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true; 
-
+    
+    // ajout sol 
+    const planeGeo = new THREE.PlaneGeometry(20, 20);
+    const planeMat = new THREE.MeshStandardMaterial({ color: 0x666666 });
+    const plane = new THREE.Mesh(planeGeo, planeMat);
+    plane.rotation.x = - Math.PI / 2;
+    plane.position.y = -0.01;
+    plane.receiveShadow = true;
+    scene.add(plane);
+    
     // Chargement du modèle P
     const loader = new GLTFLoader();
     loader.load(
@@ -63,10 +92,15 @@
       function (gltf) {
         const model = gltf.scene;
         model.scale.set(0.5, 0.5, 0.5);    
-        model.position.set(0, 0, 0);       
-        model.rotation.y = Math.PI; 
-        scene.add(model);                 
-        console.log("Modèle chargé :", model);
+        model.position.set(0, 0.8, 0);       
+        model.rotation.y = Math.PI;
+        model.traverse((node) => {
+          if (node.isMesh) {
+            node.castShadow = true;
+            node.receiveShadow = true;
+          }
+        });
+        scene.add(model);
       },
       undefined, 
       function (error) {
@@ -78,7 +112,7 @@
     function animate() {
       requestAnimationFrame(animate); // appelle la fonction en boucle
       controls.update();              // m-a-j la caméra si on bouge la souris
-      renderer.render(scene, camera); // dessine la scène avec la caméra
+      renderer.render(scene, camera); 
     }
     animate();
 
