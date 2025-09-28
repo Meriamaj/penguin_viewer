@@ -27,6 +27,7 @@
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x111111); 
     scene.fog= new THREE.Fog(0x20232a, 5, 20);
+    let penguinModel;
 
     // Création de la caméra
     const camera = new THREE.PerspectiveCamera(
@@ -88,29 +89,38 @@
     // Chargement du modèle P
     const loader = new GLTFLoader();
     loader.load(
-      'penguin.glb', 
-      function (gltf) {
-        const model = gltf.scene;
-        model.scale.set(0.5, 0.5, 0.5);    
-        model.position.set(0, 0.8, 0);       
-        model.rotation.y = Math.PI;
-        model.traverse((node) => {
-          if (node.isMesh) {
-            node.castShadow = true;
-            node.receiveShadow = true;
-          }
-        });
-        scene.add(model);
-      },
-      undefined, 
-      function (error) {
-        console.error("Erreur lors du chargement :", error);
-      }
-    );
+    'penguin.glb', 
+    function (gltf) {
+      const model = gltf.scene;
+      model.scale.set(0.5, 0.5, 0.5);    
+      model.position.set(0, 0.8, 0);       
+      model.rotation.y = Math.PI;
+      
+      model.traverse((node) => {
+        if (node.isMesh) {
+          node.castShadow = true;
+          node.receiveShadow = true;
+        }
+      });
+
+      scene.add(model);
+
+      penguinModel = model;
+    },
+    undefined, 
+    function (error) {
+      console.error("Erreur lors du chargement :", error);
+    }
+  );
+
 
     // Boucle d'animation
     function animate() {
       requestAnimationFrame(animate); // appelle la fonction en boucle
+      if (penguinModel) {
+        penguinModel.rotation.y += 0.005;
+      }
+      
       controls.update();              // m-a-j la caméra si on bouge la souris
       renderer.render(scene, camera); 
     }
