@@ -12,22 +12,30 @@
     {
       "imports": {
         "three": "https://cdn.jsdelivr.net/npm/three@0.148.0/build/three.module.js",
-        "three/examples/": "https://cdn.jsdelivr.net/npm/three@0.148.0/examples/jsm/"
+        "three/examples/": "https://cdn.jsdelivr.net/npm/three@0.148.0/examples/jsm/",
+        "@tweenjs/tween.js": "https://cdn.jsdelivr.net/npm/@tweenjs/tween.js@18.6.4/dist/tween.esm.js"
+
       }
     }
   </script>
 </head>
 <body>
   <script type="module">
-    import * as THREE from 'three';
-    import { OrbitControls } from 'three/examples/controls/OrbitControls.js';
-    import { GLTFLoader } from 'three/examples/loaders/GLTFLoader.js';
+  import * as THREE from 'three';
+  import * as TWEEN from '@tweenjs/tween.js';
+  import { OrbitControls } from 'three/examples/controls/OrbitControls.js';
+  import { GLTFLoader } from 'three/examples/loaders/GLTFLoader.js';
 
     // Création de la scène 3D
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x111111); 
     scene.fog= new THREE.Fog(0x20232a, 5, 20);
+
     let penguinModel;
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    let isJumping = false;
+
 
     // Création de la caméra
     const camera = new THREE.PerspectiveCamera(
@@ -78,15 +86,16 @@
     controls.enableDamping = true; 
     
     // ajout sol 
-    const planeGeo = new THREE.PlaneGeometry(20, 20);
-    const planeMat = new THREE.MeshStandardMaterial({ color: 0x666666 });
-    const plane = new THREE.Mesh(planeGeo, planeMat);
+    const plane = new THREE.Mesh(
+      new THREE.PlaneGeometry(20, 20),
+      new THREE.MeshStandardMaterial({ color: 0x666666 })
+    );
     plane.rotation.x = - Math.PI / 2;
     plane.position.y = -0.01;
     plane.receiveShadow = true;
     scene.add(plane);
     
-    // Chargement du modèle P
+    // Chargement du modèle 
     const loader = new GLTFLoader();
     loader.load(
     'penguin.glb', 
@@ -113,10 +122,53 @@
     }
   );
 
+    //clic change couleur
+    window.addEventListener('click', (event) => {
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+
+      if (penguinModel) {
+        const intersects = raycaster.intersectObject(penguinModel, true);
+        if (intersects.length > 0) {
+          intersects.forEach(intersect => {
+            if (intersect.object.material && intersect.object.material.color) {
+              intersect.object.material.color.set(Math.random() * 0xffffff);
+            }
+          });
+        }
+      }
+    });
+    //touche espace pour un saut
+    window.addEventListener('keydown', (event) => {
+      if (event.code === 'Space' && penguinModel && !isJumping) {
+        isJumping = true; // 🔒 bloque le saut
+
+        const originalY = penguinModel.position.y;
+
+        new TWEEN.Tween(penguinModel.position)
+          .to({ y: originalY + 0.5 }, 200)
+          .easing(TWEEN.Easing.Quadratic.Out)
+          .onComplete(() => {
+            new TWEEN.Tween(penguinModel.position)
+              .to({ y: originalY }, 200)
+              .easing(TWEEN.Easing.Quadratic.In)
+              .onComplete(() => {
+                isJumping = false; // 🔓 déverrouille le saut
+              })
+              .start();
+          })
+          .start();
+      }
+    });
 
     // Boucle d'animation
+    const clock = new THREE.Clock();
     function animate() {
       requestAnimationFrame(animate); // appelle la fonction en boucle
+      const delta = clock.getDelta();
+      TWEEN.update();
       if (penguinModel) {
         penguinModel.rotation.y += 0.005;
       }
