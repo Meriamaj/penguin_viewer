@@ -6,6 +6,24 @@
   <style>
     body { margin: 0; }
     canvas { display: block; }
+    #jumpBtn {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      padding: 12px 20px;
+      font-size: 16px;
+      background-color: #222;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      opacity: 0.8;
+      transition: background 0.3s;
+    }
+    #jumpBtn:hover {
+      background-color: #444;
+    }
+
   </style>
 
   <script type="importmap">
@@ -143,7 +161,7 @@
     //touche espace pour un saut
     window.addEventListener('keydown', (event) => {
       if (event.code === 'Space' && penguinModel && !isJumping) {
-        isJumping = true; // 🔒 bloque le saut
+        isJumping = true; 
 
         const originalY = penguinModel.position.y;
 
@@ -155,7 +173,7 @@
               .to({ y: originalY }, 200)
               .easing(TWEEN.Easing.Quadratic.In)
               .onComplete(() => {
-                isJumping = false; // 🔓 déverrouille le saut
+                isJumping = false; 
               })
               .start();
           })
@@ -177,6 +195,27 @@
       renderer.render(scene, camera); 
     }
     animate();
+    document.getElementById('jumpBtn').addEventListener('click', () => {
+      if (penguinModel && !isJumping) {
+        isJumping = true;
+
+        const originalY = penguinModel.position.y;
+
+        new TWEEN.Tween(penguinModel.position)
+          .to({ y: originalY + 0.5 }, 200)
+          .easing(TWEEN.Easing.Quadratic.Out)
+          .onComplete(() => {
+            new TWEEN.Tween(penguinModel.position)
+              .to({ y: originalY }, 200)
+              .easing(TWEEN.Easing.Quadratic.In)
+              .onComplete(() => {
+                isJumping = false;
+              })
+              .start();
+          })
+          .start();
+      }
+    });
 
     // Réajuster la scène quand on redimensionne la fenêtre
     window.addEventListener("resize", () => {
@@ -185,5 +224,7 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
   </script>
+  <button id="jumpBtn">Sauter</button>
+
 </body>
 </html>
